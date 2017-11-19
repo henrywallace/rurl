@@ -1,0 +1,11 @@
+[package]
+
+name = "rurl"
+version = "0.0.1"
+authors = [ "Henry Wallace <henry@henrywallace.io" ]
+
+[dependencies]
+futures = "0.1"
+hyper = "0.11"
+tokio-core = "0.1"
+clap = "2.27.1"
