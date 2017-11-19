@@ -8,8 +8,9 @@ use std::io::{self, Write};
 use hyper::Client;
 use futures::Future;
 use futures::stream::Stream;
+use std::str::FromStr;
 
-fn fetch(url: &str, only_headers: bool) {
+fn fetch(url: &str, only_headers: bool, method: hyper::Method) {
     let url = url.parse::<hyper::Uri>().unwrap();
     if url.scheme() != Some("http") {
         println!("non-http scheme passed");
@@ -18,9 +19,10 @@ fn fetch(url: &str, only_headers: bool) {
     let mut core = tokio_core::reactor::Core::new().unwrap();
     let handle = core.handle();
     let client = Client::configure().no_proto().build(&handle);
+    let req = hyper::Request::new(method, url);
 
     let work = client
-        .get(url)
+        .request(req)
         .and_then(|res| {
             if only_headers {
                 println!("HTTP/1.1 {}", res.status());
@@ -43,7 +45,18 @@ fn main() {
     let matches = App::new("rurl")
         .arg(Arg::with_name("url").help("URL to fetch").required(true))
         .arg(Arg::with_name("head").short("I").long("head"))
+        .arg(
+            Arg::with_name("request")
+                .short("X")
+                .long("request")
+                .takes_value(true),
+        )
         .get_matches();
     let url = matches.value_of("url").unwrap();
-    fetch(url, matches.is_present("head"));
+    let req = matches.value_of("request").unwrap_or("GET");
+    fetch(
+        url,
+        matches.is_present("head"),
+        hyper::Method::from_str(req).unwrap(),
+    );
 }
